@@ -1,26 +1,110 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fff9f0;
+  --foreground: #17152b;
+  --violet: #6c3bff;
+  --violet-deep: #4b20c9;
+  --coral: #ff6b6b;
+  --coral-deep: #9e2b3a;
+  --sunshine: #ffd166;
+  --mint: #8ce6c1;
+  --cream: #fff9f0;
+  --ink: #17152b;
+  --muted: #716d80;
+  --line: #eae4f0;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-violet: var(--violet);
+  --color-violet-deep: var(--violet-deep);
+  --color-coral: var(--coral);
+  --color-coral-deep: var(--coral-deep);
+  --color-sunshine: var(--sunshine);
+  --color-mint: var(--mint);
+  --color-cream: var(--cream);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: #ffd166;
+  color: #17152b;
+}
+
+:focus-visible {
+  outline: 2px solid #6c3bff;
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 60;
+  transform: translateY(-150%);
+  border-radius: 0.75rem;
+  background: white;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  color: #17152b;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee 46s linear infinite;
+}
+
+.marquee-static {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .marquee-track {
+    display: none;
+  }
+
+  .marquee-static {
+    display: flex;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
