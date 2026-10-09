@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, SlidersHorizontal } from "lucide-react"
+import { Search, SlidersHorizontal, X } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
@@ -87,12 +87,25 @@ export function WishExplorer({
     sort: variant === "page" ? query.sort : "featured",
   })
   const shown = filtered.slice(0, variant === "home" ? homeLimit : visible)
-  const filtersActive =
-    query.category !== "All" ||
-    query.country !== "All" ||
-    query.budget !== "any" ||
-    (variant === "page" && query.sort !== "featured") ||
-    text.trim().length > 0
+  const budgetLabel =
+    budgetOptions.find((option) => option.id === query.budget)?.label ?? "Budget"
+  const sortLabel =
+    sortOptions.find((option) => option.id === query.sort)?.label ?? "Sort"
+  const activeFilters = [
+    query.category !== "All"
+      ? { id: "category", label: query.category, clear: () => update({ category: "All" }) }
+      : null,
+    query.country !== "All"
+      ? { id: "country", label: query.country, clear: () => update({ country: "All" }) }
+      : null,
+    query.budget !== "any"
+      ? { id: "budget", label: budgetLabel, clear: () => update({ budget: "any" }) }
+      : null,
+    variant === "page" && query.sort !== "featured"
+      ? { id: "sort", label: sortLabel, clear: () => update({ sort: "featured" }) }
+      : null,
+  ].filter((item) => item !== null)
+  const filtersActive = activeFilters.length > 0 || text.trim().length > 0
 
   function clearFilters() {
     setText("")
@@ -131,14 +144,63 @@ export function WishExplorer({
               value={text}
               onChange={(event) => setText(event.target.value)}
               placeholder="Try camera, books, Japan..."
-              className={cn(controlClass, "h-12 pr-4 pl-11")}
+              className={cn(controlClass, "h-14 pr-4 pl-11 text-base sm:h-12")}
               type="search"
             />
           </div>
         </div>
 
+        <div className="sm:hidden">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            aria-expanded={filtersOpen}
+            className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 text-base font-semibold"
+          >
+            <span className="inline-flex items-center gap-2">
+              <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+              Filters
+            </span>
+            {activeFilters.length > 0 ? (
+              <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-violet px-2 text-sm text-white">
+                {activeFilters.length}
+                <span className="sr-only"> active filters</span>
+              </span>
+            ) : (
+              <span className="text-sm font-medium text-muted">
+                {variant === "page"
+                  ? "Category, country, budget, sort"
+                  : "Category, country, budget"}
+              </span>
+            )}
+          </button>
+          {activeFilters.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {activeFilters.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={filter.clear}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-line bg-white px-3.5 text-sm font-semibold"
+                >
+                  {filter.label}
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="sr-only">Remove {filter.label} filter</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="min-h-11 px-2 text-sm font-semibold text-violet"
+              >
+                Clear all
+              </button>
+            </div>
+          ) : null}
+        </div>
+
         <div
-          className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
+          className="hidden flex-wrap gap-2 sm:flex"
           role="group"
           aria-label="Categories"
         >
@@ -163,7 +225,7 @@ export function WishExplorer({
           })}
         </div>
 
-        <div className="flex flex-wrap items-end gap-3">
+        <div className="hidden flex-wrap items-end gap-3 sm:flex">
           <div className="hidden min-w-44 flex-1 sm:block">
             <label htmlFor={`${variant}-country`} className="text-sm font-semibold">
               Country
@@ -221,16 +283,6 @@ export function WishExplorer({
               </div>
             </div>
           ) : null}
-          <Button
-            variant="secondary"
-            size="md"
-            className="sm:hidden"
-            onClick={() => setFiltersOpen(true)}
-            aria-expanded={filtersOpen}
-          >
-            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-            Filters
-          </Button>
           {filtersActive ? (
             <button
               type="button"
@@ -303,9 +355,40 @@ export function WishExplorer({
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
         title="Filter wishes"
-        description="Country and budget apply to the example wishes on this page."
+        description="Choose a category, country, or budget. The list updates as you choose."
       >
-        <div className="space-y-4">
+        <div className="space-y-5">
+          <div>
+            <p className="text-sm font-semibold" id={`${variant}-sheet-categories`}>
+              Category
+            </p>
+            <div
+              className="mt-2 grid grid-cols-2 gap-2"
+              role="group"
+              aria-labelledby={`${variant}-sheet-categories`}
+            >
+              {["All", ...categories].map((category) => {
+                const active = query.category === category
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => update({ category })}
+                    className={cn(
+                      "min-h-12 rounded-2xl px-3 py-2 text-center text-sm font-semibold leading-5",
+                      category === "All" && "col-span-2",
+                      active
+                        ? "bg-ink text-white"
+                        : "border border-line bg-white text-ink",
+                    )}
+                  >
+                    {category}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <div>
             <label htmlFor="drawer-country" className="text-sm font-semibold">
               Country
@@ -314,6 +397,7 @@ export function WishExplorer({
               <Select
                 id="drawer-country"
                 value={query.country}
+                className="h-14 text-base"
                 onChange={(event) => update({ country: event.target.value })}
               >
                 <option value="All">All countries</option>
@@ -333,6 +417,7 @@ export function WishExplorer({
               <Select
                 id="drawer-budget"
                 value={query.budget}
+                className="h-14 text-base"
                 onChange={(event) => update({ budget: event.target.value })}
               >
                 {budgetOptions.map((option) => (
@@ -352,6 +437,7 @@ export function WishExplorer({
                 <Select
                   id="drawer-sort"
                   value={query.sort}
+                  className="h-14 text-base"
                   onChange={(event) => update({ sort: event.target.value })}
                 >
                   {sortOptions.map((option) => (
@@ -363,7 +449,20 @@ export function WishExplorer({
               </div>
             </div>
           ) : null}
-          <Button onClick={() => setFiltersOpen(false)}>Show wishes</Button>
+          <div className="flex flex-col gap-3">
+            {filtersActive ? (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="min-h-12 text-sm font-semibold text-violet"
+              >
+                Clear all filters
+              </button>
+            ) : null}
+            <Button className="min-h-14 w-full text-base" onClick={() => setFiltersOpen(false)}>
+              Show {filtered.length} {filtered.length === 1 ? "wish" : "wishes"}
+            </Button>
+          </div>
         </div>
       </Dialog>
     </div>
